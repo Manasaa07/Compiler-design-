@@ -1,0 +1,124 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+#define MAX_IDENTIFIER_LENGTH 30
+
+
+int isKeyword(char *token) {
+    char keywords[][10] = {"if", "else", "while", "for", "int", "float", "char", "return"};
+    int i;
+
+    for (i = 0; i < sizeof(keywords) / sizeof(keywords[0]); i++) {
+        if (strcmp(keywords[i], token) == 0) {
+            return 1; // It's a keyword
+        }
+    }
+
+    return 0; // It's not a keyword
+}
+
+
+int isOperator(char ch) {
+    char operators[] = "+-*/%=";
+    int i;
+
+    for (i = 0; i < strlen(operators); i++) {
+        if (ch == operators[i]) {
+            return 1; // It's an operator
+        }
+    }
+
+    return 0; // It's not an operator
+}
+
+
+int isDelimiter(char ch) {
+    return (ch == ' ' || ch == '\t' || ch == '\n');
+}
+
+
+void analyzeTokens(char *input) {
+    char token[MAX_IDENTIFIER_LENGTH];
+    int i = 0;
+    int inComment = 0;
+
+    while (input[i] != '\0') {
+        
+        if (input[i] == '/' && input[i + 1] == '*') {
+            inComment = 1;
+            i += 2;
+            while (input[i] != '\0' && !(input[i] == '*' && input[i + 1] == '/')) {
+                i++;
+            }
+            if (input[i] != '\0') {
+                inComment = 0;
+                i += 2; // Skip the closing */
+            }
+            continue;
+        }
+
+       
+        if (input[i] == '/' && input[i + 1] == '/') {
+            while (input[i] != '\n' && input[i] != '\0') {
+                i++;
+            }
+            continue;
+        }
+
+       
+        if (!inComment) {
+           
+            if (isDelimiter(input[i])) {
+                i++;
+                continue;
+            }
+
+           
+            if (isalpha(input[i]) || input[i] == '_') {
+                int j = 0;
+                while (isalnum(input[i]) || input[i] == '_') {
+                    token[j++] = input[i++];
+                }
+                token[j] = '\0';
+
+                if (isKeyword(token)) {
+                    printf("Keyword: %s\n", token);
+                } else {
+                    printf("Identifier: %s\n", token);
+                }
+            }
+
+            
+            else if (isdigit(input[i])) {
+                int j = 0;
+                while (isdigit(input[i])) {
+                    token[j++] = input[i++];
+                }
+                token[j] = '\0';
+                printf("Constant: %s\n", token);
+            }
+
+           
+            else if (isOperator(input[i])) {
+                printf("Operator: %c\n", input[i++]);
+            } else {
+                i++;
+            }
+        } else {
+            i++;
+        }
+    }
+}
+
+int main() {
+    char input[1000];
+
+    printf("Enter C code (press Ctrl+D to end input):\n");
+
+    while (fgets(input, sizeof(input), stdin) != NULL) {
+        analyzeTokens(input);
+    }
+
+    return 0;
+}
