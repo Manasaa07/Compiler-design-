@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <ctype.h>
+
+// Function declarations
+int expr();
+int term();
+int factor();
+
+// Global variables
+char input[100];
+int position = 0;
+
+int main() {
+    printf("Enter an arithmetic expression: ");
+    fgets(input, sizeof(input), stdin);
+
+    // Remove newline character from input
+    for (int i = 0; i < sizeof(input); i++) {
+        if (input[i] == '\n') {
+            input[i] = '\0';
+            break;
+        }
+    }
+
+    // Begin parsing
+    if (expr() && input[position] == '\0') {
+        printf("Parsing successful.\n");
+    } else {
+        printf("Error in parsing.\n");
+    }
+
+    return 0;
+}
+
+// Recursive descent parsing functions
+int expr() {
+    int value = term();
+    while (input[position] == '+' || input[position] == '-') {
+        char op = input[position++];
+        if (op == '+') {
+            value += term();
+        } else {
+            value -= term();
+        }
+    }
+    return value;
+}
+
+int term() {
+    int value = factor();
+    while (input[position] == '*' || input[position] == '/') {
+        char op = input[position++];
+        if (op == '*') {
+            value *= factor();
+        } else {
+            int divisor = factor();
+            if (divisor != 0) {
+                value /= divisor;
+            } else {
+                printf("Error: Division by zero.\n");
+                return 0;
+            }
+        }
+    }
+    return value;
+}
+
+int factor() {
+    if (isdigit(input[position])) {
+        return input[position++] - '0';
+    } else if (input[position] == '(') {
+        position++;
+        int value = expr();
+        if (input[position] == ')') {
+            position++;
+            return value;
+        } else {
+            printf("Error: Missing closing parenthesis.\n");
+            return 0;
+        }
+    } else {
+        printf("Error: Invalid expression.\n");
+        return 0;
+    }
+}
